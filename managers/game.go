@@ -2,6 +2,7 @@ package managers
 
 import (
 	"littlejumbo/genius/loopables"
+	"littlejumbo/genius/utils"
 
 	"github.com/mikabrytu/gomes-engine/render"
 )
@@ -26,8 +27,8 @@ func Game() {
 	yellow.PosX += size + offset
 	yellow.PosY += size + offset
 
-	loopables.NewSquare("Red", red, render.Red)
-	loopables.NewSquare("Green", green, render.Green)
-	loopables.NewSquare("Blue", blue, render.Blue)
-	loopables.NewSquare("Yellow", yellow, render.Yellow)
+	loopables.NewSquare("Red", red, render.Red, utils.NOTE_C)
+	loopables.NewSquare("Green", green, render.Green, utils.NOTE_E)
+	loopables.NewSquare("Blue", blue, render.Blue, utils.NOTE_G)
+	loopables.NewSquare("Yellow", yellow, render.Yellow, utils.NOTE_B)
 }
