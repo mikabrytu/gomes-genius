@@ -1,8 +1,8 @@
 package loopables
 
 import (
-	"fmt"
 	"littlejumbo/genius/utils"
+	"time"
 
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
@@ -10,16 +10,23 @@ import (
 )
 
 type Square struct {
-	name  string
-	rect  render.RectSpecs
-	color render.Color
+	name        string
+	rect        render.RectSpecs
+	color       render.Color
+	blinkIn     bool
+	blinkOut    bool
+	blinkStart  time.Time
+	blinkFinish time.Time
 }
+
+const BLINK_TIME time.Duration = 165
 
 func NewSquare(name string, rect render.RectSpecs, color render.Color) {
 	square := &Square{
-		name:  name,
-		rect:  rect,
-		color: color,
+		name:    name,
+		rect:    rect,
+		color:   color,
+		blinkIn: false,
 	}
 
 	lifecycle.Register(lifecycle.Loopable{
@@ -37,7 +44,8 @@ func (s *Square) init() {
 		}
 
 		if utils.IsClickInsideRect(click, s.rect) {
-			fmt.Printf("Click inside square %v\n", s.name)
+			s.blinkIn = true
+			s.blinkStart = setBlinkTime()
 		}
 
 		return nil
@@ -45,5 +53,51 @@ func (s *Square) init() {
 }
 
 func (s *Square) update() {
-	render.DrawSimpleShapes(s.rect, s.color)
+	var c render.Color
+	var done bool
+
+	if s.blinkIn {
+		c, done = blink(s.color, render.Transparent, s.blinkStart)
+		if done {
+			s.blinkIn = false
+			s.blinkOut = true
+			s.blinkFinish = setBlinkTime()
+		}
+	} else if s.blinkOut {
+		c, done = blink(render.Transparent, s.color, s.blinkFinish)
+		if done {
+			s.blinkOut = false
+		}
+	} else {
+		c = s.color
+	}
+
+	render.DrawSimpleShapes(s.rect, c)
+}
+
+func blink(original, target render.Color, endTime time.Time) (render.Color, bool) {
+	var c render.Color
+	var finished bool = false
+
+	totalBlinkDuration := BLINK_TIME * time.Millisecond
+	elapsed := time.Since(endTime.Add(-totalBlinkDuration))
+	t := float64(elapsed) / float64(totalBlinkDuration)
+
+	if t < 0 {
+		t = 0
+	} else if t > 1 {
+		t = 1
+	}
+
+	c = utils.LerpColor(original, target, t)
+
+	if t >= 1 {
+		finished = true
+	}
+
+	return c, finished
+}
+
+func setBlinkTime() time.Time {
+	return time.Now().Add(BLINK_TIME * time.Millisecond)
 }
