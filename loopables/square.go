@@ -4,6 +4,7 @@ import (
 	"littlejumbo/genius/utils"
 	"time"
 
+	"github.com/mikabrytu/gomes-engine/audio"
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/lifecycle"
 	"github.com/mikabrytu/gomes-engine/render"
@@ -13,6 +14,7 @@ type Square struct {
 	name        string
 	rect        render.RectSpecs
 	color       render.Color
+	note        string
 	blinkIn     bool
 	blinkOut    bool
 	blinkStart  time.Time
@@ -21,11 +23,12 @@ type Square struct {
 
 const BLINK_TIME time.Duration = 165
 
-func NewSquare(name string, rect render.RectSpecs, color render.Color) {
+func NewSquare(name string, rect render.RectSpecs, color render.Color, note string) {
 	square := &Square{
 		name:    name,
 		rect:    rect,
 		color:   color,
+		note:    note,
 		blinkIn: false,
 	}
 
@@ -46,6 +49,8 @@ func (s *Square) init() {
 		if utils.IsClickInsideRect(click, s.rect) {
 			s.blinkIn = true
 			s.blinkStart = setBlinkTime()
+
+			audio.PlaySFX(s.note)
 		}
 
 		return nil
