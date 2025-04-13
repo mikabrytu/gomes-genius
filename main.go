@@ -1,7 +1,13 @@
 package main
 
-import gomesengine "github.com/mikabrytu/gomes-engine"
+import (
+	"littlejumbo/genius/managers"
+
+	gomesengine "github.com/mikabrytu/gomes-engine"
+)
 
 func main() {
-	gomesengine.HiGomes()
+	gomesengine.Init("Genius", 430, 430)
+	managers.Game()
+	gomesengine.Run()
 }
