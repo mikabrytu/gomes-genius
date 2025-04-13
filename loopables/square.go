@@ -19,23 +19,41 @@ type Square struct {
 	blinkOut    bool
 	blinkStart  time.Time
 	blinkFinish time.Time
+	canPlay     bool
 }
 
 const BLINK_TIME time.Duration = 165
 
-func NewSquare(name string, rect render.RectSpecs, color render.Color, note string) {
+func NewSquare(name string, rect render.RectSpecs, color render.Color, note string) *Square {
 	square := &Square{
-		name:    name,
-		rect:    rect,
-		color:   color,
-		note:    note,
-		blinkIn: false,
+		name:     name,
+		rect:     rect,
+		color:    color,
+		note:     note,
+		blinkIn:  false,
+		blinkOut: false,
+		canPlay:  true,
 	}
 
 	lifecycle.Register(lifecycle.Loopable{
 		Init:   square.init,
 		Update: square.update,
 	})
+
+	return square
+}
+
+func (s *Square) EnablePlay(enabled bool) {
+	s.canPlay = enabled
+}
+
+func (s *Square) Click() {
+	s.blinkIn = true
+	s.blinkStart = setBlinkTime()
+
+	if s.canPlay {
+		audio.PlaySFX(s.note)
+	}
 }
 
 func (s *Square) init() {
@@ -46,11 +64,13 @@ func (s *Square) init() {
 			Y: position[0].([]any)[1].(int32),
 		}
 
-		if utils.IsClickInsideRect(click, s.rect) {
+		if utils.IsClickInsideRect(click, s.rect) { // TODO: Try to use the Click() code
 			s.blinkIn = true
 			s.blinkStart = setBlinkTime()
 
-			audio.PlaySFX(s.note)
+			if s.canPlay {
+				audio.PlaySFX(s.note)
+			}
 		}
 
 		return nil

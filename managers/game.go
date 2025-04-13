@@ -7,7 +7,18 @@ import (
 	"github.com/mikabrytu/gomes-engine/render"
 )
 
+type Note struct {
+	id   int8
+	path string
+}
+
+var red, green, blue, yellow *loopables.Square
+
 func Game() {
+	instantiateSquares()
+}
+
+func instantiateSquares() {
 	var size int32 = 200
 	var offset int32 = 10
 	rect := render.RectSpecs{
@@ -17,18 +28,18 @@ func Game() {
 		Height: size,
 	}
 
-	red := rect
-	green := rect
-	blue := rect
-	yellow := rect
+	rrect := rect
+	grect := rect
+	brect := rect
+	yrect := rect
 
-	green.PosX += size + offset
-	blue.PosY += size + offset
-	yellow.PosX += size + offset
-	yellow.PosY += size + offset
+	grect.PosX += size + offset
+	brect.PosY += size + offset
+	yrect.PosX += size + offset
+	yrect.PosY += size + offset
 
-	loopables.NewSquare("Red", red, render.Red, utils.NOTE_C)
-	loopables.NewSquare("Green", green, render.Green, utils.NOTE_E)
-	loopables.NewSquare("Blue", blue, render.Blue, utils.NOTE_G)
-	loopables.NewSquare("Yellow", yellow, render.Yellow, utils.NOTE_B)
+	red = loopables.NewSquare("Red", rrect, render.Red, utils.NOTE_C_PATH)
+	green = loopables.NewSquare("Green", grect, render.Green, utils.NOTE_E_PATH)
+	blue = loopables.NewSquare("Blue", brect, render.Blue, utils.NOTE_G_PATH)
+	yellow = loopables.NewSquare("Yellow", yrect, render.Yellow, utils.NOTE_B_PATH)
 }
