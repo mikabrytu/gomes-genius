@@ -26,8 +26,8 @@ func Game() {
 	yellow.PosX += size + offset
 	yellow.PosY += size + offset
 
-	loopables.DrawSquare(red, render.Red)
-	loopables.DrawSquare(green, render.Green)
-	loopables.DrawSquare(blue, render.Blue)
-	loopables.DrawSquare(yellow, render.Yellow)
+	loopables.NewSquare("Red", red, render.Red)
+	loopables.NewSquare("Green", green, render.Green)
+	loopables.NewSquare("Blue", blue, render.Blue)
+	loopables.NewSquare("Yellow", yellow, render.Yellow)
 }
