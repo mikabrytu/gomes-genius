@@ -1,6 +1,7 @@
 package loopables
 
 import (
+	event_names "littlejumbo/genius/events"
 	"littlejumbo/genius/utils"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 )
 
 type Square struct {
+	id          int
 	name        string
 	rect        render.RectSpecs
 	color       render.Color
@@ -24,8 +26,9 @@ type Square struct {
 
 const BLINK_TIME time.Duration = 165
 
-func NewSquare(name string, rect render.RectSpecs, color render.Color, note string) *Square {
+func NewSquare(name string, id int, rect render.RectSpecs, color render.Color, note string) *Square {
 	square := &Square{
+		id:       id,
 		name:     name,
 		rect:     rect,
 		color:    color,
@@ -50,10 +53,7 @@ func (s *Square) EnablePlay(enabled bool) {
 func (s *Square) Click() {
 	s.blinkIn = true
 	s.blinkStart = setBlinkTime()
-
-	if s.canPlay {
-		audio.PlaySFX(s.note)
-	}
+	audio.PlaySFX(s.note)
 }
 
 func (s *Square) init() {
@@ -71,6 +71,8 @@ func (s *Square) init() {
 			if s.canPlay {
 				audio.PlaySFX(s.note)
 			}
+
+			events.Emit(event_names.GENIUS_PLAYER_SINGLE_NOTE_FINISHED, s.id)
 		}
 
 		return nil
