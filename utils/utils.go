@@ -1,6 +1,10 @@
 package utils
 
-import "github.com/mikabrytu/gomes-engine/render"
+import (
+	"container/list"
+
+	"github.com/mikabrytu/gomes-engine/render"
+)
 
 // TODO: Incorporate this into the engine
 
@@ -21,4 +25,12 @@ func LerpColor(original, target render.Color, time float64) render.Color {
 		B: uint8(float64(original.B)*(1-time) + float64(target.B)*time),
 		A: uint8(float64(original.A)*(1-time) + float64(target.A)*time),
 	}
+}
+
+func ListToIntArray(l *list.List) []int {
+	var result []int
+	for e := l.Front(); e != nil; e = e.Next() {
+		result = append(result, e.Value.(int))
+	}
+	return result
 }
