@@ -50,10 +50,13 @@ func (s *Square) EnablePlay(enabled bool) {
 	s.canPlay = enabled
 }
 
-func (s *Square) Click() {
+func (s *Square) Click(play bool) {
 	s.blinkIn = true
 	s.blinkStart = setBlinkTime()
-	audio.PlaySFX(s.note)
+
+	if play {
+		audio.PlaySFX(s.note)
+	}
 }
 
 func (s *Square) init() {

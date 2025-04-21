@@ -1,12 +1,12 @@
 package managers
 
 import (
-	"fmt"
 	event_names "littlejumbo/genius/events"
 	"littlejumbo/genius/loopables"
 	"littlejumbo/genius/utils"
 	"time"
 
+	"github.com/mikabrytu/gomes-engine/audio"
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/render"
 )
@@ -16,12 +16,19 @@ var sequence []int
 var playerCount int
 var aiCount int
 
+const (
+	WAIT_SEQUENCE_START   = 500
+	WAIT_SEQUENCE_FAIL    = 1500
+	WAIT_SEQUENCE_SUCCESS = 1000
+	WAIT_NEXT_AI_NOTE     = 500
+)
+
 func Game() {
 	prepareSquares()
 	prepareAI()
 
 	events.Subscribe(event_names.GENIUS_AI_SEQUENCE_FINISHED, func(params ...any) error {
-		onNewSequence(params[0].([]interface{})[0].([]interface{})[0].([]int))
+		onNewSequence(params[0].([]any)[0].([]any)[0].([]int))
 		return nil
 	})
 
@@ -31,7 +38,7 @@ func Game() {
 	})
 
 	events.Subscribe(event_names.GENIUS_PLAYER_SINGLE_NOTE_FINISHED, func(params ...any) error {
-		onPlayerNote(params[0].([]interface{})[0].([]interface{})[0].(int))
+		onPlayerNote(params[0].([]any)[0].([]any)[0].(int))
 		return nil
 	})
 }
@@ -73,17 +80,36 @@ func onNewSequence(s []int) {
 	playerCount = 0
 
 	enablePlayer(false)
-	onAINote()
+
+	time.AfterFunc(WAIT_SEQUENCE_START*time.Millisecond, func() {
+		playAINote()
+	})
 }
 
 func onPlayerNote(note int) {
+	if note != sequence[playerCount] {
+		red.Click(false)
+		green.Click(false)
+		blue.Click(false)
+		yellow.Click(false)
+
+		audio.PlaySFX(utils.SFX_FAIL)
+
+		time.AfterFunc(WAIT_SEQUENCE_FAIL*time.Millisecond, func() {
+			println("Wrong Sequence!")
+			loopables.NewAISequence(len(sequence))
+		})
+
+		return
+	}
+
 	playerCount++
 
 	if playerCount == len(sequence) {
 		playerCount = 0
 		enablePlayer(false)
 
-		time.AfterFunc(1*time.Second, func() {
+		time.AfterFunc(WAIT_SEQUENCE_SUCCESS*time.Millisecond, func() {
 			loopables.NewAISequence(len(sequence) + 1)
 		})
 	}
@@ -91,19 +117,15 @@ func onPlayerNote(note int) {
 
 func onAINote() {
 	if aiCount >= len(sequence) {
-		fmt.Printf("AI played %d notes. Now player will play\n", aiCount)
-
 		enablePlayer(true)
 	} else {
-		time.AfterFunc(1500*time.Millisecond, func() {
+		time.AfterFunc(WAIT_NEXT_AI_NOTE*time.Millisecond, func() {
 			playAINote()
 		})
 	}
 }
 
 func playAINote() {
-	println("AI will play next note...")
-
 	loopables.PlayAINote(sequence[aiCount])
 	aiCount++
 }
