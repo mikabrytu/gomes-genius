@@ -5,6 +5,7 @@ import (
 	event_names "littlejumbo/genius/events"
 	"littlejumbo/genius/loopables"
 	"littlejumbo/genius/utils"
+	"time"
 
 	"github.com/mikabrytu/gomes-engine/events"
 	"github.com/mikabrytu/gomes-engine/render"
@@ -12,31 +13,25 @@ import (
 
 var red, green, blue, yellow *loopables.Square
 var sequence []int
-var playerNoteCount int
+var playerCount int
+var aiCount int
 
 func Game() {
 	prepareSquares()
 	prepareAI()
 
 	events.Subscribe(event_names.GENIUS_AI_SEQUENCE_FINISHED, func(params ...any) error {
-		sequence = params[0].([]interface{})[0].([]interface{})[0].([]int)
-		fmt.Printf("AI Sequence: %v\n", sequence)
+		onNewSequence(params[0].([]interface{})[0].([]interface{})[0].([]int))
+		return nil
+	})
 
-		enablePlayer(true)
+	events.Subscribe(event_names.GENIUS_AI_SINGLE_NOTE_FINISHED, func(params ...any) error {
+		onAINote()
 		return nil
 	})
 
 	events.Subscribe(event_names.GENIUS_PLAYER_SINGLE_NOTE_FINISHED, func(params ...any) error {
-		note := params[0].([]interface{})[0].([]interface{})[0].(int)
-		fmt.Printf("Player note: %d\n", note)
-
-		playerNoteCount++
-		if playerNoteCount == len(sequence) {
-			playerNoteCount = 0
-			enablePlayer(false)
-			loopables.EnablePlay(true)
-		}
-
+		onPlayerNote(params[0].([]interface{})[0].([]interface{})[0].(int))
 		return nil
 	})
 }
@@ -69,8 +64,48 @@ func prepareSquares() {
 
 func prepareAI() {
 	loopables.NewAi()
-	loopables.EnablePlay(true)
 	loopables.LoadSquares([]*loopables.Square{red, green, blue, yellow})
+}
+
+func onNewSequence(s []int) {
+	sequence = s
+	aiCount = 0
+	playerCount = 0
+
+	enablePlayer(false)
+	onAINote()
+}
+
+func onPlayerNote(note int) {
+	playerCount++
+
+	if playerCount == len(sequence) {
+		playerCount = 0
+		enablePlayer(false)
+
+		time.AfterFunc(1*time.Second, func() {
+			loopables.NewAISequence(len(sequence) + 1)
+		})
+	}
+}
+
+func onAINote() {
+	if aiCount >= len(sequence) {
+		fmt.Printf("AI played %d notes. Now player will play\n", aiCount)
+
+		enablePlayer(true)
+	} else {
+		time.AfterFunc(1500*time.Millisecond, func() {
+			playAINote()
+		})
+	}
+}
+
+func playAINote() {
+	println("AI will play next note...")
+
+	loopables.PlayAINote(sequence[aiCount])
+	aiCount++
 }
 
 func enablePlayer(enable bool) {

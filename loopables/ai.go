@@ -1,9 +1,8 @@
 package loopables
 
 import (
-	"container/list"
+	"fmt"
 	event_names "littlejumbo/genius/events"
-	"littlejumbo/genius/utils"
 	"math/rand"
 	"time"
 
@@ -12,55 +11,63 @@ import (
 )
 
 var squares []*Square
-var ssize int
-var running bool = false
-var playing bool = false
 
 const WAIT_TIME = 500
 
 func NewAi() {
+	println("AI initialized")
+
 	lifecycle.Register(lifecycle.Loopable{
 		Init:   _init,
 		Update: update,
 	})
 }
 
-func EnablePlay(enabled bool) {
-	playing = enabled
-}
-
 func LoadSquares(sList []*Square) {
+	println("AI squares loaded")
+
 	squares = sList
 }
 
+func NewAISequence(size int) {
+	println("Generating AI sequence")
+
+	if size == 0 {
+		panic("Size of the sequence cannot be 0")
+	}
+
+	sequence := make([]int, size)
+
+	for i := range size {
+		rand.Seed(time.Now().UnixNano())
+		index := rand.Intn(len(squares))
+		sequence[i] = index
+	}
+
+	fmt.Printf("AI sequence: %v\n", sequence)
+
+	events.Emit(event_names.GENIUS_AI_SEQUENCE_FINISHED, sequence)
+}
+
+func PlayAINote(note int) {
+	fmt.Printf("Playing AI note %d\n", note)
+
+	squares[note].Click()
+
+	time.AfterFunc(WAIT_TIME*time.Millisecond, func() {
+		println("Time waited before emitting event")
+
+		events.Emit(event_names.GENIUS_AI_SINGLE_NOTE_FINISHED)
+	})
+}
+
 func _init() {
-	ssize = 0
-
 	events.Subscribe(events.INPUT_KEYBOARD_PRESSED_F, func(params ...any) error {
-		if !running {
-			running = true
-			return nil
-		}
-
+		NewAISequence(1)
 		return nil
 	})
 }
 
 func update() {
-	if running && playing && squares != nil {
-		var sequence *list.List = list.New()
-		ssize++
 
-		for range ssize {
-			rand.Seed(time.Now().UnixNano())
-			index := rand.Intn(len(squares))
-			squares[index].Click()
-			sequence.PushBack(index)
-		}
-
-		isequence := utils.ListToIntArray(sequence)
-
-		playing = false
-		events.Emit(event_names.GENIUS_AI_SEQUENCE_FINISHED, isequence)
-	}
 }
